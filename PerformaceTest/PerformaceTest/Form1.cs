@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -67,12 +68,19 @@ namespace PerformaceTest
             long memUse;
             string txt;
             int maxDifferCharCount;
+            long workSetBefore;
+            long workSetAfter;
+
+            PerformanceCounter cpu = new PerformanceCounter(
+            "Processor", "% Processor Time", "_Total");
+            PerformanceCounter memory = new PerformanceCounter(
+                "Memory", "% Committed Bytes in Use");
 
             string[] txts = File.ReadAllLines(@"..\..\io\Txts.txt");
-            System.Diagnostics.Debug.WriteLine("txts length:" + txts.Length);
 
             a = Environment.WorkingSet;
             start = DateTime.Now;
+            Debug.WriteLine("memoryCounter:" + memory.NextValue().ToString());
 
             for (int i = 0; i < txts.Length; i++)
             {
@@ -81,42 +89,132 @@ namespace PerformaceTest
             }
 
             b = Environment.WorkingSet;
+            Debug.WriteLine("memoryCounter:" + memory.NextValue().ToString());
+            workSetBefore = (a >= 0) ? a : ((long)int.MaxValue * 2) + a;
+            workSetAfter = (b >= 0) ? b : ((long)int.MaxValue * 2) + b;
             memUse = (b - a);
 
-            System.Diagnostics.Debug.WriteLine(" time : " + DateTime.Now.Subtract(start).TotalSeconds.ToString("0.000000") + " sec");
-            System.Diagnostics.Debug.WriteLine(" memory : " + memUse/1024 + " KB");
-
+            Debug.WriteLine(" time : " + DateTime.Now.Subtract(start).TotalSeconds.ToString("0.000000") + " sec");
+            Debug.WriteLine(" memory : " + memUse / 1024 + " KB");
             MessageBox.Show("ok");
         }
 
+        #region memory allocate/usage optimize
+        //public int LengthOfLongestSubstring(string s)
+        //{
+        //    int maxStringLength = 0;
+        //    int curMaxStringLength;
+        //    for (int i = 0; i < s.Length; i++)
+        //    {
+        //        //maxStringLength = 1;
+        //        //curMaxStringLength = 1;
+        //        curMaxStringLength = checkHasRepeatChar(s, i) - i;
+        //        maxStringLength = (maxStringLength > curMaxStringLength) ? maxStringLength : curMaxStringLength;
+        //    }
+        //    return maxStringLength;
+        //    //return 0;
+        //}
+
+        //private int checkHasRepeatChar(string s, int index)
+        //{
+        //    for (int j = index + 1; j < s.Length; j++)
+        //    {
+        //        for (int k = index; k < j; k++)
+        //        {
+        //            if (s[j] == s[k])
+        //            {
+        //                return j;
+        //            }
+        //        }
+        //    }
+        //    return s.Length;
+        //}
+        #endregion
+
+
+        #region version1
+
+        //public int LengthOfLongestSubstring(string s)
+        //{
+        //    string curMaxString = "";
+        //    string result = "";
+        //    int curIndex;
+        //    char indexChar;
+        //    for (int i = 0; i < s.Length; i++)
+        //    {
+        //        result = "";
+        //        curIndex = i;
+        //        while (curIndex < s.Length)
+        //        {
+        //            indexChar = s[curIndex];
+        //            if (result.IndexOf(indexChar) >= 0)
+        //            {
+        //                break;
+        //            }
+        //            result += indexChar;
+        //            curIndex++;
+        //        }
+        //        curMaxString = (curMaxString.Length >= result.Length) ? curMaxString : result;
+        //    }
+        //    return curMaxString.Length;
+        //}
+
+        #endregion
+
+        #region slide window
         public int LengthOfLongestSubstring(string s)
         {
-            //int maxStringLength = 0;
-            //int curMaxStringLength;
-            for (int i = 0; i < s.Length; i++)
+            int maxLength = 0;
+            int startIndex = 0;
+            int endIndex = 0;
+            int nextIndex;
+            int windowLength;
+            while (endIndex < s.Length)
             {
-                //maxStringLength = 1;
-                //curMaxStringLength = 1;
-                //curMaxStringLength = checkHasRepeatChar(s, i) - i;
-                //maxStringLength = (maxStringLength > curMaxStringLength) ? maxStringLength : curMaxStringLength;
-            }
-            //return maxStringLength;
-            return 0;
-        }
-
-        private int checkHasRepeatChar(string s, int index)
-        {
-            for (int j = index + 1; j < s.Length; j++)
-            {
-                for (int k = index; k < j; k++)
+                nextIndex = endIndex + 1;
+                if (nextIndex < s.Length)
                 {
-                    if (s[j] == s[k])
+                    for (int i = startIndex; i < endIndex; i++)
                     {
-                        return j;
+                        if (s[nextIndex] == s[i])
+                        {
+                            windowLength = nextIndex - startIndex;
+                            maxLength = windowLength > maxLength ? windowLength : maxLength;
+                            startIndex = i + 1;
+                            break;
+                        }
                     }
                 }
+                endIndex++;
             }
-            return s.Length;
+            windowLength = endIndex - startIndex;
+            maxLength = windowLength > maxLength ? windowLength : maxLength;
+            return maxLength;
+        }
+
+        #endregion
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            long workSetBefore;
+            long workSetAfter;
+            long memUse;
+
+            var before = GC.GetTotalMemory(false);
+
+            workSetBefore = Environment.WorkingSet;
+
+            int a = 1;
+            int b = 1;
+            int c = 1;
+            int d = 1;
+            a = a + 2;
+
+            workSetAfter = Environment.WorkingSet;
+            var after = GC.GetTotalMemory(false);
+            memUse = (workSetAfter - workSetBefore);
+
+            Debug.WriteLine(" memory : " + memUse / 1024 + " KB");
         }
     }
 }
