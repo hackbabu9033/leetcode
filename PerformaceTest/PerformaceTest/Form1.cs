@@ -15,6 +15,7 @@ namespace PerformaceTest
     {
         //public static int maxStringLength = 0;
         //public static int curMaxStringLength;
+        private static int[] test123 = new int[10000000];
         public Form1()
         {
             InitializeComponent();
@@ -68,19 +69,11 @@ namespace PerformaceTest
             long memUse;
             string txt;
             int maxDifferCharCount;
-            long workSetBefore;
-            long workSetAfter;
-
-            PerformanceCounter cpu = new PerformanceCounter(
-            "Processor", "% Processor Time", "_Total");
-            PerformanceCounter memory = new PerformanceCounter(
-                "Memory", "% Committed Bytes in Use");
 
             string[] txts = File.ReadAllLines(@"..\..\io\Txts.txt");
 
-            a = Environment.WorkingSet;
             start = DateTime.Now;
-            Debug.WriteLine("memoryCounter:" + memory.NextValue().ToString());
+            a = Environment.WorkingSet;
 
             for (int i = 0; i < txts.Length; i++)
             {
@@ -89,9 +82,6 @@ namespace PerformaceTest
             }
 
             b = Environment.WorkingSet;
-            Debug.WriteLine("memoryCounter:" + memory.NextValue().ToString());
-            workSetBefore = (a >= 0) ? a : ((long)int.MaxValue * 2) + a;
-            workSetAfter = (b >= 0) ? b : ((long)int.MaxValue * 2) + b;
             memUse = (b - a);
 
             Debug.WriteLine(" time : " + DateTime.Now.Subtract(start).TotalSeconds.ToString("0.000000") + " sec");
@@ -99,40 +89,7 @@ namespace PerformaceTest
             MessageBox.Show("ok");
         }
 
-        #region memory allocate/usage optimize
-        //public int LengthOfLongestSubstring(string s)
-        //{
-        //    int maxStringLength = 0;
-        //    int curMaxStringLength;
-        //    for (int i = 0; i < s.Length; i++)
-        //    {
-        //        //maxStringLength = 1;
-        //        //curMaxStringLength = 1;
-        //        curMaxStringLength = checkHasRepeatChar(s, i) - i;
-        //        maxStringLength = (maxStringLength > curMaxStringLength) ? maxStringLength : curMaxStringLength;
-        //    }
-        //    return maxStringLength;
-        //    //return 0;
-        //}
-
-        //private int checkHasRepeatChar(string s, int index)
-        //{
-        //    for (int j = index + 1; j < s.Length; j++)
-        //    {
-        //        for (int k = index; k < j; k++)
-        //        {
-        //            if (s[j] == s[k])
-        //            {
-        //                return j;
-        //            }
-        //        }
-        //    }
-        //    return s.Length;
-        //}
-        #endregion
-
-
-        #region version1
+        #region brute force
 
         //public int LengthOfLongestSubstring(string s)
         //{
@@ -161,60 +118,136 @@ namespace PerformaceTest
 
         #endregion
 
+        #region brute force - optimize memory
+        //public int LengthOfLongestSubstring(string s)
+        //{
+        //    int maxStringLength = 0;
+        //    int curMaxStringLength;
+        //    for (int i = 0; i < s.Length; i++)
+        //    {
+        //        curMaxStringLength = checkHasRepeatChar(s, i) - i;
+        //        maxStringLength = (maxStringLength > curMaxStringLength) ? maxStringLength : curMaxStringLength;
+        //    }
+        //    return maxStringLength;
+        //}
+
+        //private int checkHasRepeatChar(string s, int index)
+        //{
+        //    for (int j = index + 1; j < s.Length; j++)
+        //    {
+        //        for (int k = index; k < j; k++)
+        //        {
+        //            if (s[j] == s[k])
+        //            {
+        //                return j;
+        //            }
+        //        }
+        //    }
+        //    return s.Length;
+        //}
+        #endregion
+
         #region slide window
+        //public int LengthOfLongestSubstring(string s)
+        //{
+        //    int maxLength = 0;
+        //    int startIndex = 0;
+        //    int endIndex = 0;
+        //    int nextIndex;
+        //    int windowLength;
+        //    while (endIndex < s.Length)
+        //    {
+        //        nextIndex = endIndex + 1;
+        //        if (nextIndex < s.Length)
+        //        {
+        //            for (int i = startIndex; i < endIndex; i++)
+        //            {
+        //                if (s[nextIndex] == s[i])
+        //                {
+        //                    windowLength = nextIndex - startIndex;
+        //                    maxLength = windowLength > maxLength ? windowLength : maxLength;
+        //                    startIndex = i + 1;
+        //                    break;
+        //                }
+        //            }
+        //        }
+        //        endIndex++;
+        //    }
+        //    windowLength = endIndex - startIndex;
+        //    maxLength = windowLength > maxLength ? windowLength : maxLength;
+        //    return maxLength;
+        //}
+
+        #endregion
+
+        #region slide window optimize
         public int LengthOfLongestSubstring(string s)
         {
+            int[] charShowUpCount = new int[128]; // cache slide window char showup count
             int maxLength = 0;
             int startIndex = 0;
             int endIndex = 0;
             int nextIndex;
             int windowLength;
+            char end;
+            char start;
             while (endIndex < s.Length)
             {
-                nextIndex = endIndex + 1;
-                if (nextIndex < s.Length)
+                end = s[endIndex];
+                charShowUpCount[end]++;
+                if (charShowUpCount[end] > 1)
                 {
-                    for (int i = startIndex; i < endIndex; i++)
-                    {
-                        if (s[nextIndex] == s[i])
-                        {
-                            windowLength = nextIndex - startIndex;
-                            maxLength = windowLength > maxLength ? windowLength : maxLength;
-                            startIndex = i + 1;
-                            break;
-                        }
-                    }
+                    start = s[startIndex];
+                    charShowUpCount[start]--;
+                    startIndex++;
                 }
+                windowLength = endIndex - startIndex;
+                maxLength = windowLength > maxLength ? windowLength : maxLength;
                 endIndex++;
             }
-            windowLength = endIndex - startIndex;
-            maxLength = windowLength > maxLength ? windowLength : maxLength;
             return maxLength;
         }
 
         #endregion
 
-        private void button3_Click(object sender, EventArgs e)
+        private void button4_Click(object sender, EventArgs e)
         {
-            long workSetBefore;
-            long workSetAfter;
-            long memUse;
+            Stopwatch stopWatch = new Stopwatch();
+            int iterationCount = 100000000;
+            char[] array = new char[iterationCount];
+            string s = "";
+            List<char> list = new List<char>();
 
-            var before = GC.GetTotalMemory(false);
+            long before;
+            long after;
 
-            workSetBefore = Environment.WorkingSet;
+            before = Environment.WorkingSet;
+            stopWatch.Start();
+            for (int i = 0; i < iterationCount; i++)
+            {
+                array[i] = 'a';
+            }
+            stopWatch.Stop();
+            Debug.WriteLine("array result:" + stopWatch.ElapsedMilliseconds.ToString());
+            stopWatch.Reset();
 
-            int a = 1;
-            int b = 1;
-            int c = 1;
-            int d = 1;
-            a = a + 2;
-
-            workSetAfter = Environment.WorkingSet;
-            var after = GC.GetTotalMemory(false);
-            memUse = (workSetAfter - workSetBefore);
-
-            Debug.WriteLine(" memory : " + memUse / 1024 + " KB");
+            stopWatch.Start();
+            for (int i = 0; i < iterationCount; i++)
+            {
+                list.Add('a');
+            }
+            stopWatch.Stop();
+            Debug.WriteLine("list result:" + stopWatch.ElapsedMilliseconds.ToString());
+            stopWatch.Reset();
+            //after = Environment.WorkingSet;
+            //stopWatch.Start();
+            //for (int i = 0; i < iterationCount; i++)
+            //{
+            //    s += 'a';
+            //}
+            //stopWatch.Stop();
+            //Debug.WriteLine("string result:" + stopWatch.ElapsedMilliseconds.ToString());
+            //stopWatch.Reset();
         }
     }
 }
