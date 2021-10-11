@@ -6,25 +6,8 @@ namespace Problem3_add_two0_number
     {
         static void Main(string[] args)
         {
-            var l1 = new ListNode(5);
-            var l11 = new ListNode(5);
-            l1.next = l11;
-            var l2 = new ListNode(2);
-            var l22 = new ListNode(2);
-            l2.next = l22;
-            Solution.AddTwoNumbers(l1, l2);
-        }
-    }
-
-
-    public class ListNode
-    {
-        public int val;
-        public ListNode next;
-        public ListNode(int val = 0, ListNode next = null)
-        {
-            this.val = val;
-            this.next = next;
+            //DataProcessor.Create(100,10);
+            var testData = DataProcessor.Read();
         }
     }
 
