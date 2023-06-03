@@ -249,5 +249,23 @@ namespace PerformaceTest
             //Debug.WriteLine("string result:" + stopWatch.ElapsedMilliseconds.ToString());
             //stopWatch.Reset();
         }
+
+        // leetcode Problem5：find Palindromic string
+        private void Problem5_Click(object sender, EventArgs e)
+        {
+            string[] txts = File.ReadAllLines(@"..\..\io\Txts.txt");
+
+
+        }
+
+        private string LongestPalindrome(string s)
+        {
+            var length = s.Length;
+            var usedEndPalindromeIndex = new int[length];
+            for (int i = 0; i < length && s.Length; i++)
+            {
+                s.Substring
+            }
+        }
     }
 }
